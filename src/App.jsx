@@ -8,7 +8,7 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <ZoomBoard zoom={0.5}>
+        <ZoomBoard zoom={1.0}>
           <ZoomItem x={10} y={10} width={640} height={480}>
             <ZoomImage src="assets/bill_the_cat.jpg" alt="Bill the Cat" />
           </ZoomItem>

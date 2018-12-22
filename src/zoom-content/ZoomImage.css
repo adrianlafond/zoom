@@ -1,0 +1,4 @@
+.zoom__image {
+  transform-origin: 0 0;
+  pointer-events: none;
+}
