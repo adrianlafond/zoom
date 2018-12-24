@@ -1,6 +1,6 @@
 .zoom__item {
   background-color: white;
-  border: 1px solid black;
+  outline: 1px solid black;
   position: absolute;
   overflow: hidden;
 }

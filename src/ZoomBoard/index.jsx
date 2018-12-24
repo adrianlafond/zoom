@@ -1,51 +1,58 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import cx from 'classnames';
+import classnames from 'classnames';
+import { propTypes, defaultProps } from './props';
+import Zoom from './Zoom';
+import Layout from './Layout';
+import Size from './Size';
+import Pan from './Pan';
+import * as keys from './keys';
 import ZoomContext from '../ZoomContext';
+import ZoomItem from '../ZoomItem';
 import './index.css';
 
+const SELECTOR = 'zoom__board';
+
 class ZoomBoard extends Component {
-  static propTypes = {
-    zoom: PropTypes.number,
-    margin: PropTypes.number,
-  };
+  static propTypes = propTypes;
+  static defaultProps = defaultProps;
 
-  static defaultProps = {
-    zoom: 1,
-    margin: 10,
-  };
-
-  prevClient = null;
+  utils = null;
+  children = null;
 
   constructor(props) {
     super(props);
-    this.state = { width: 0, height: 0, dragging: false };
+    const { zoom } = props;
+    this.createUtils();
+    this.utils.layout.generate();
+    const { width, height } = this.utils.size.reset(zoom);
+    this.state = {
+      width,
+      height,
+      zoom,
+      panning: false,
+      panningApproved: true,
+    };
     this.ref = React.createRef();
   }
 
-  componentDidMount() {
-    this.resetSize();
+  createUtils() {
+    this.utils = {
+      layout: new Layout(this),
+      size: new Size(this),
+      pan: new Pan(this),
+      zoom: new Zoom(this),
+    };
   }
 
   componentDidUpdate(prevProps) {
+    if (this.props.zoom !== prevProps.zoom && this.props.zoom !== this.state.zoom) {
+      this.setState({ zoom: this.props.zoom });
+    }
+    this.autoLayoutChange();
     if (this.props.margin !== prevProps.margin ||
         this.props.children.length !== prevProps.children.length) {
-      this.resetSize();
+      this.setState(this.utils.size.reset());
     }
-  }
-
-  resetSize() {
-    const { margin, zoom } = this.props;
-    const size = this.props.children.reduce((tmp, item) => {
-      tmp.width = Math.max(tmp.width, item.props.x + item.props.width);
-      tmp.height = Math.max(tmp.height, item.props.y + item.props.height);
-      return tmp;
-    }, { width: 0, height: 0 });
-    size.width *= zoom;
-    size.height *= zoom;
-    size.width += margin;
-    size.height += margin;
-    this.setState(size);
   }
 
   render() {
@@ -54,82 +61,79 @@ class ZoomBoard extends Component {
         <div
           className={this.getOuterClass()}
           tabIndex="0"
-          onMouseDown={this.onStartDragMouse}
-          onTouchStart={this.onStartDragTouch}
+          onMouseDown={this.utils.pan.startMouse}
+          onTouchStart={this.utils.pan.startTouch}
+          onDoubleClick={this.utils.zoom.toggle}
+          onKeyDown={this.utils.zoom.keyboard}
           ref={this.ref}>
           <div className="zoom__board-inner" style={this.getInnerStyle()}>
-            {this.props.children}
+            {this.renderChildren()}
           </div>
         </div>
       </ZoomContext.Provider>
     );
   }
 
-  onStartDragMouse = (event) => {
-    event.preventDefault();
-    window.addEventListener('mousemove', this.onDrag);
-    window.addEventListener('mouseup', this.onStopDragMouse);
-    this.onStartDrag(event);
-  }
-
-  onStartDragTouch = (event) => {
-    window.addEventListener('touchmove', this.onDrag);
-    window.addEventListener('touchend', this.onStopDragTouch);
-    window.addEventListener('touchcancel', this.onStopDragTouch);
-    this.onStartDrag(event);
-  }
-
-  onStartDrag = (event) => {
-    this.setState({ dragging: true });
-  }
-
-  onDrag = (event) => {
-    if (this.state.dragging) {
-      const eventObj = event.touches ? event.touches[0] : event;
-      if (this.prevClient) {
-        this.ref.current.scrollLeft -= (eventObj.clientX - this.prevClient.x);
-        this.ref.current.scrollTop -= eventObj.clientY - this.prevClient.y;
+  renderChildren() {
+    let zoomIndex = 0;
+    const layout = this.utils.layout.data;
+    this.children = this.allChildren.map((item, index) => {
+      if (item.type === ZoomItem) {
+        const { x, y, width, height, children } = item.props;
+        const useX = layout ? layout[zoomIndex].x : x;
+        const useY = layout ? layout[zoomIndex].y : y;
+        const key = item.key || `item-${index}`;
+        zoomIndex += 1;
+        return (
+          <ZoomItem x={useX} y={useY} width={width} height={height} key={key}>
+            {children}
+          </ZoomItem>
+        );
       }
-      this.prevClient = { x: eventObj.clientX, y: eventObj.clientY };
+      return item;
+    });
+    this.utils.layout.destroy();
+    return this.children;
+  }
+
+  get allChildren() {
+    return this.children || this.props.children;
+  }
+
+  get zoomChildren() {
+    return this.allChildren.filter(item => item.type === ZoomItem);
+  }
+
+  onKeyDown = (event) => {
+    if (event.keyCode === keys.SPACE) {
+      this.setState({ panningApproved: true });
+      event.preventDefault();
     }
   }
 
-  onStopDragMouse = (event) => {
-    window.removeEventListener('mousemove', this.onDrag);
-    window.removeEventListener('mouseup', this.onStopDragMouse);
-    this.onStopDrag(event);
-  }
-
-  onStopDragTouch = (event) => {
-    window.removeEventListener('touchmove', this.onDrag);
-    window.removeEventListener('touchend', this.onStopDragTouch);
-    window.removeEventListener('touchcancel', this.onStopDragTouch);
-    this.onStopDrag(event);
-  }
-
-  onStopDrag = (event) => {
-    if (this.state.dragging) {
-      this.prevClient = null;
-      this.setState({ dragging: false });
+  autoLayoutChange() {
+    if (this.props.autoLayout.onChange) {
+      this.utils.layout.generate();
+      this.forceUpdate();
     }
   }
 
   getContext() {
-    const { zoom } = this.props;
-    const { width, height } = this.state;
-    return { zoom,
-      viewport: {
-        x: 0,
-        y: 0,
-        width: width / zoom,
-        height: height / zoom,
-      },
+    const layout = this.utils.layout.data;
+    const { width, height, zoom } = this.state;
+    const viewport = {
+      x: 0,
+      y: 0,
+      width: width / zoom,
+      height: height / zoom,
     };
+    return { zoom, layout, viewport };
   }
 
   getOuterClass() {
-    return cx('zoom__board', {
-      'zoom__board--dragging': this.state.dragging,
+    return classnames(SELECTOR, {
+      [`${SELECTOR}--panning`]: this.state.panning,
+      [`${SELECTOR}--panning-approved`]: this.state.panningApproved,
     });
   }
 

@@ -2,6 +2,7 @@ import React from 'react';
 
 const defaults = {
   zoom: 1.0,
+  layout: null,
   viewport: {
     x: 0,
     y: 0,

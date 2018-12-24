@@ -5,15 +5,19 @@
   width: 100%;
   height: 100%;
   overflow: scroll;
+  cursor: default;
 }
 
 .zoom__board:focus {
   background: white;
+}
+
+.zoom__board--panning-approved {
   cursor: grab;
 }
 
-.zoom__board--dragging,
-.zoom__board--dragging:active {
+.zoom__board--panning,
+.zoom__board--panning:active {
   cursor: grabbing;
 }
 
