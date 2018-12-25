@@ -4,3 +4,7 @@
   position: absolute;
   overflow: hidden;
 }
+
+.zoom__item--dragging {
+  cursor: move;
+}

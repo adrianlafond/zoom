@@ -21,6 +21,10 @@
   cursor: grabbing;
 }
 
+.zoom__board--dragging {
+  cursor: auto;
+}
+
 .zoom__board-inner {
   position: relative;
   width: 5000px;

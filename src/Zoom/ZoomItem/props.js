@@ -6,6 +6,7 @@ export const propTypes = {
   width: PropTypes.number,
   height: PropTypes.number,
   onDrag: PropTypes.func,
+  dragging: PropTypes.bool,
 };
 
 export const defaultProps = {
@@ -14,4 +15,5 @@ export const defaultProps = {
   width: 640,
   height: 480,
   onDrag: () => { },
+  dragging: false,
 };

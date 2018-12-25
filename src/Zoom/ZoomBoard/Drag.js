@@ -21,6 +21,7 @@ class Drag {
    * @private methods below...
    */
   startDrag(event, id, type) {
+    event.preventDefault();
     event.stopPropagation();
     if (type === MOUSE) {
       window.addEventListener('mousemove', this.drag);
@@ -36,7 +37,6 @@ class Drag {
 
   getItems(id) {
     return Array.isArray(id) ? id : [id];
-    // return this.instance.zoomChildren.filter(item => array.indexOf(item.props.uid) !== -1);
   }
 
   drag = (event) => {
@@ -64,6 +64,7 @@ class Drag {
   stop(event) {
     this.items = null;
     this.position = null;
+    this.instance.stopDragItems();
   }
 }
 

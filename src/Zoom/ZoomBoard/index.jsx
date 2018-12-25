@@ -37,6 +37,7 @@ class ZoomBoard extends Component {
       zoom,
       panning: false,
       panningApproved: true,
+      dragging: false,
     };
     this.ref = React.createRef();
   }
@@ -90,14 +91,16 @@ class ZoomBoard extends Component {
         const itemX = layout ? layout[zoomIndex].x : x;
         const itemY = layout ? layout[zoomIndex].y : y;
         const key = uid || ZoomBoard.getUniqueId();
-        const useX = itemX + (this.isDragging(uid) ? this.utils.drag.moveX : 0);
-        const useY = itemY + (this.isDragging(uid) ? this.utils.drag.moveY : 0);
+        const isDragging = this.isDragging(uid);
+        const useX = itemX + (isDragging ? this.utils.drag.moveX : 0);
+        const useY = itemY + (isDragging ? this.utils.drag.moveY : 0);
         zoomIndex += 1;
         return (
           <ZoomItem
             x={useX} y={useY} width={width} height={height}
             key={key} uid={key}
-            onDrag={this.utils.drag.start}>
+            onDrag={this.utils.drag.start}
+            dragging={isDragging}>
             {children}
           </ZoomItem>
         );
@@ -127,9 +130,13 @@ class ZoomBoard extends Component {
     }
   }
 
-  dragItems = (items, moveX, moveY) => {
-    this.setState(this.utils.size.reset());
-    // this.forceUpdate();
+  dragItems() {
+    const { width, height } = this.utils.size.reset();
+    this.setState({ dragging: true, width, height });
+  }
+
+  stopDragItems() {
+    this.setState({ dragging: false });
   }
 
   autoLayoutChange() {
@@ -152,9 +159,11 @@ class ZoomBoard extends Component {
   }
 
   getOuterClass() {
+    const { panning, panningApproved, dragging } = this.state;
     return classnames(SELECTOR, {
-      [`${SELECTOR}--panning`]: this.state.panning,
-      [`${SELECTOR}--panning-approved`]: this.state.panningApproved,
+      [`${SELECTOR}--panning`]: panning,
+      [`${SELECTOR}--panning-approved`]: panningApproved && !dragging,
+      [`${SELECTOR}--dragging`]: dragging,
     });
   }
 

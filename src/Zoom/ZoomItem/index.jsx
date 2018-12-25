@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import classnames from 'classnames';
 import ZoomContext from '../ZoomContext';
 import { MOUSE, TOUCH } from '../constants';
 import { propTypes, defaultProps } from './props';
@@ -18,7 +19,7 @@ class ZoomItem extends Component {
     return this.isInViewport() && (
       <div
         ref={this.ref}
-        className="zoom__item"
+        className={this.getClass()}
         style={this.getStyle()}
         onMouseDown={this.onMouseDown}
         onTouchStart={this.onTouchStart}
@@ -40,6 +41,13 @@ class ZoomItem extends Component {
     const { x, y, width, height } = this.props;
     const { viewport: v } = this.context;
     return x + width > v.x && x < v.x + v.width && y + height > v.y && y < v.y + v.height;
+  }
+
+  getClass() {
+    const BE = 'zoom__item';
+    return classnames(BE, {
+      [`${BE}--dragging`]: this.props.dragging,
+    });
   }
 
   getStyle() {
