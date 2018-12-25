@@ -1,17 +1,16 @@
 import React, { Component } from 'react';
-import ZoomBoard from './ZoomBoard';
-import ZoomItem from './ZoomItem';
-import ZoomImage from './zoom-content/ZoomImage';
-import ZoomColor from './zoom-content/ZoomColor';
+import Zoom from './Zoom';
 import './App.css';
+
+const { ZoomItem, ZoomImage, ZoomColor } = Zoom;
 
 class App extends Component {
   render() {
     return (
       <div className="App">
-        <ZoomBoard autoLayout={{ onInit: true }}>
+        <Zoom autoLayout={{ onInit: true }}>
           {[].concat(this.renderImages(), this.renderColors())}
-        </ZoomBoard>
+        </Zoom>
       </div>
     );
   }

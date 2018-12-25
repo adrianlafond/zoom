@@ -1,4 +1,4 @@
-import * as keys from './keys';
+import * as keys from '../constants';
 
 class Zoom {
   constructor(zoomBoard) {

@@ -3,7 +3,7 @@ class Size {
     this.instance = zoomBoard;
   }
 
-  reset(zoom = this.instance.state.instance) {
+  reset(zoom = this.instance.state.zoom) {
     const layout = this.instance.utils.layout.data;
     const size = this.instance.zoomChildren.reduce((tmp, item, index) => {
       const x = layout ? layout[index].x : item.props.x;

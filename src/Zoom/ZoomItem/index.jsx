@@ -1,31 +1,39 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
 import ZoomContext from '../ZoomContext';
+import { MOUSE, TOUCH } from '../constants';
+import { propTypes, defaultProps } from './props';
 import './index.css';
 
 class ZoomItem extends Component {
-  static propTypes = {
-    x: PropTypes.number,
-    y: PropTypes.number,
-    width: PropTypes.number,
-    height: PropTypes.number,
-  }
-
-  static defaultProps = {
-    x: 0,
-    y: 0,
-    width: 640,
-    height: 480,
-  }
-
+  static propTypes = propTypes;
+  static defaultProps = defaultProps;
   static contextType = ZoomContext;
+
+  constructor(props) {
+    super(props);
+    this.ref = React.createRef();
+  }
 
   render() {
     return this.isInViewport() && (
-      <div className="zoom__item" style={this.getStyle()}>
+      <div
+        ref={this.ref}
+        className="zoom__item"
+        style={this.getStyle()}
+        onMouseDown={this.onMouseDown}
+        onTouchStart={this.onTouchStart}
+        >
         {this.props.children}
       </div>
     );
+  }
+
+  onMouseDown = (event) => {
+    this.props.onDrag(event, this.props.uid, MOUSE);
+  }
+
+  onTouchStart = (event) => {
+    this.props.onDrag(event, this.props.uid, TOUCH);
   }
 
   isInViewport() {

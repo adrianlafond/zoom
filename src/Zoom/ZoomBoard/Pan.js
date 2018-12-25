@@ -1,3 +1,5 @@
+import { getInputPosition } from './event';
+
 class Pan {
   previous = null;
   approved = false;
@@ -23,13 +25,13 @@ class Pan {
 
   start(event) {
     event.preventDefault();
-    this.previous = this.getXY(event);
+    this.previous = getInputPosition(event);
     this.instance.setState({ panning: true });
   }
 
   pan = (event) => {
     if (this.instance.state.panning) {
-      const position = this.getXY(event);
+      const position = getInputPosition(event);
       const element = this.instance.ref.current;
       element.scrollLeft -= position.x - this.previous.x;
       element.scrollTop -= position.y - this.previous.y;
@@ -55,11 +57,6 @@ class Pan {
       this.previous = null;
       this.instance.setState({ panning: false });
     }
-  }
-
-  getXY(event) {
-    const eventObj = event.touches ? event.touches[0] : event;
-    return { x: eventObj.clientX, y: eventObj.clientY };
   }
 }
 

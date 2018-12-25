@@ -5,16 +5,22 @@ import Zoom from './Zoom';
 import Layout from './Layout';
 import Size from './Size';
 import Pan from './Pan';
-import * as keys from './keys';
+import Drag from './Drag';
+import * as keys from '../constants';
 import ZoomContext from '../ZoomContext';
 import ZoomItem from '../ZoomItem';
 import './index.css';
 
 const SELECTOR = 'zoom__board';
+let uidIndex = 0;
 
 class ZoomBoard extends Component {
   static propTypes = propTypes;
   static defaultProps = defaultProps;
+
+  static getUniqueId(prefix = 'item-') {
+    return `${prefix}${uidIndex++}`;
+  }
 
   utils = null;
   children = null;
@@ -41,6 +47,7 @@ class ZoomBoard extends Component {
       size: new Size(this),
       pan: new Pan(this),
       zoom: new Zoom(this),
+      drag: new Drag(this),
     };
   }
 
@@ -79,13 +86,18 @@ class ZoomBoard extends Component {
     const layout = this.utils.layout.data;
     this.children = this.allChildren.map((item, index) => {
       if (item.type === ZoomItem) {
-        const { x, y, width, height, children } = item.props;
-        const useX = layout ? layout[zoomIndex].x : x;
-        const useY = layout ? layout[zoomIndex].y : y;
-        const key = item.key || `item-${index}`;
+        const { x, y, width, height, uid, children } = item.props;
+        const itemX = layout ? layout[zoomIndex].x : x;
+        const itemY = layout ? layout[zoomIndex].y : y;
+        const key = uid || ZoomBoard.getUniqueId();
+        const useX = itemX + (this.isDragging(uid) ? this.utils.drag.moveX : 0);
+        const useY = itemY + (this.isDragging(uid) ? this.utils.drag.moveY : 0);
         zoomIndex += 1;
         return (
-          <ZoomItem x={useX} y={useY} width={width} height={height} key={key}>
+          <ZoomItem
+            x={useX} y={useY} width={width} height={height}
+            key={key} uid={key}
+            onDrag={this.utils.drag.start}>
             {children}
           </ZoomItem>
         );
@@ -94,6 +106,10 @@ class ZoomBoard extends Component {
     });
     this.utils.layout.destroy();
     return this.children;
+  }
+
+  isDragging(id) {
+    return this.utils.drag.items && this.utils.drag.items.indexOf(id) !== -1;
   }
 
   get allChildren() {
@@ -109,6 +125,11 @@ class ZoomBoard extends Component {
       this.setState({ panningApproved: true });
       event.preventDefault();
     }
+  }
+
+  dragItems = (items, moveX, moveY) => {
+    this.setState(this.utils.size.reset());
+    // this.forceUpdate();
   }
 
   autoLayoutChange() {
